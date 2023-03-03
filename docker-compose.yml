@@ -1,5 +1,6 @@
 version: "3.7"
 services:
+
   fastapi:
     container_name: fastapi
     build:
@@ -12,6 +13,41 @@ services:
       - ./main.py:/app/main.py
     env_file:
       - ./.env
+    depends_on:
+      - elasticsearch
     command: uvicorn main:app --host 0.0.0.0 --port 8989 --reload
     ports:
       - 8989:8989
+    networks:
+      - es-net
+
+  elasticsearch:
+    container_name: elasticsearch
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.3.2
+    volumes:
+      - ./esdata:/usr/share/elasticsearch/data
+    environment:
+      - xpack.security.enabled=false
+      - "discovery.type=single-node"
+    ports:
+      - 9200:9200
+      - 9300:9300
+    networks:
+      - es-net
+
+  # kibana:
+  #   container_name: cub-kibana
+  #   image: docker.elastic.co/kibana/kibana:8.3.2
+  #   environment:
+  #     - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+  #   depends_on:
+  #     - elasticsearch
+  #   ports:
+  #     - 5601:5601
+  #   networks:
+  #     - es-net
+
+
+networks:
+  es-net:
+    driver: bridge
